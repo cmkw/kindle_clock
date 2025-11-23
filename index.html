@@ -3,51 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kindle Dashboard V7</title>
+    <title>Kindle Dashboard V8 (ES5)</title>
     <style>
-        /* Kindle 墨水屏优化样式 - V7 修正版 */
+        /* --- 基础样式 --- */
         body {
             background-color: #ffffff;
             color: #000000;
             font-family: "Bookerly", "Songti SC", serif;
             margin: 0;
             padding: 5px;
-            display: flex;
-            flex-direction: column;
             height: 98vh;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
+            /* 默认竖屏布局 */
+            display: block; 
+            text-align: center;
         }
 
-        /* --- 1. 顶部：时间 & 黄历 --- */
+        /* 旋转容器：用于包裹所有内容，实现横屏 */
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.5s;
+        }
+
+        /* --- 1. 顶部 --- */
         .header {
-            text-align: center;
             border-bottom: 3px solid #000;
             padding-bottom: 5px;
             width: 94%;
             margin-bottom: 8px;
         }
         #clock {
-            font-size: 120px;
+            font-size: 100px; /* 略微调小以兼容更多机型 */
             font-weight: 900;
             line-height: 0.9;
             margin: 2px 0;
-            letter-spacing: -4px;
+            letter-spacing: -3px;
         }
-        #date {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 0px;
-        }
-        #lunar {
-            font-size: 18px;
-            margin-top: 5px;
-            font-weight: normal;
-            white-space: nowrap;
-        }
+        #date { font-size: 24px; font-weight: bold; margin-top: 0; }
+        #lunar { font-size: 18px; margin-top: 5px; font-weight: normal; }
 
-        /* --- 2. 中部：天气 --- */
+        /* --- 2. 中部 --- */
         .weather-container {
             width: 98%;
             margin-top: 5px;
@@ -56,255 +56,249 @@
         .location {
             font-size: 16px;
             font-weight: bold;
-            text-align: center;
             margin-bottom: 8px;
             border-bottom: 1px dashed #000;
             display: inline-block;
             padding-bottom: 2px;
-            position: relative;
-            left: 50%;
-            transform: translateX(-50%);
         }
         .forecast {
-            display: flex;
+            display: flex; /* Flexbox在旧Kindle上支持较好，如果不行需改table */
+            display: -webkit-flex; /* 兼容旧WebKit */
             justify-content: space-around;
-            text-align: center;
+            -webkit-justify-content: space-around;
         }
         .day {
-            flex: 1;
+            flex: 1; -webkit-flex: 1;
             padding: 0 1px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
-        .day-name { font-size: 16px; font-weight: bold; margin-bottom: 2px;}
-        .day-icon { font-size: 32px; line-height: 1.1; margin: 2px 0; }
-        
-        .day-temp { 
-            font-size: 16px; 
-            font-weight: bold; 
-            margin: 2px 0; 
-            white-space: nowrap;
-        }
-        
-        .day-detail {
-            font-size: 14px;
-            display: flex;
-            justify-content: center;
-            gap: 4px;
-            margin-top: 1px;
-            white-space: nowrap;
-        }
-        .day-desc { font-size: 14px; margin-top: 2px;}
+        .day-icon { font-size: 30px; line-height: 1.1; margin: 2px 0; }
+        .day-temp { font-size: 16px; font-weight: bold; margin: 2px 0; }
+        .day-detail { font-size: 12px; margin-top: 1px; }
+        .day-desc { font-size: 14px; margin-top: 2px; }
 
-        /* --- 3. 底部：台词 --- */
+        /* --- 3. 底部 --- */
         .quote-container {
             border-top: 2px solid #000;
             padding-top: 8px;
-            text-align: center;
             width: 94%;
         }
-        #quote-text {
-            font-size: 18px;
-            font-style: italic;
-            font-weight: bold;
-            margin-bottom: 5px;
-            line-height: 1.2;
+        #quote-text { font-size: 18px; font-style: italic; font-weight: bold; margin-bottom: 5px; }
+        #quote-source { font-size: 15px; text-align: right; margin-top: 2px; }
+
+        /* --- 旋转控制按钮 --- */
+        #rotate-btn {
+            position: fixed;
+            bottom: 5px;
+            right: 5px;
+            font-size: 20px;
+            border: 1px solid #000;
+            background: #fff;
+            padding: 2px 5px;
+            cursor: pointer;
+            z-index: 999;
         }
-        #quote-source {
-            font-size: 15px;
-            text-align: right;
-            margin-top: 2px;
+
+        /* --- 横屏模式样式 (强制旋转) --- */
+        body.landscape-mode #container {
+            /* 旋转90度 */
+            transform: rotate(90deg);
+            -webkit-transform: rotate(90deg);
+            /* 旋转后需要重新调整宽宽 */
+            width: 98vh; 
+            height: 98vw;
+            /* 居中修正 */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-left: -49vh; 
+            margin-top: -49vw;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div id="clock">--:--</div>
-        <div id="date">Loading...</div>
-        <div id="lunar">Loading...</div>
-    </div>
+    <div id="rotate-btn" onclick="toggleRotate()">⟳</div>
 
-    <div class="weather-container">
-        <div class="location">📍 深圳·宝安·西乡</div>
-        <div class="forecast" id="weather-box">
-            Loading Weather...
+    <div id="container">
+        <div class="header">
+            <div id="clock">--:--</div>
+            <div id="date">Loading...</div>
+            <div id="lunar">Loading...</div>
+        </div>
+
+        <div class="weather-container">
+            <div class="location">📍 深圳·宝安·西乡</div>
+            <div class="forecast" id="weather-box">
+                Loading Weather...
+            </div>
+        </div>
+
+        <div class="quote-container">
+            <div id="quote-text">“...”</div>
+            <div id="quote-source">—— 豆瓣</div>
         </div>
     </div>
 
-    <div class="quote-container">
-        <div id="quote-text">“...”</div>
-        <div id="quote-source">—— 豆瓣</div>
-    </div>
-
     <script>
-        // --- 配置区 ---
-        const LAT = 22.57; 
-        const LON = 113.86; 
+        // --- 兼容性配置 (ES5) ---
+        var LAT = 22.57; 
+        var LON = 113.86; 
 
-        // --- 1. 时钟 ---
+        // 1. 时钟函数
         function updateClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-            const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]}`;
+            var now = new Date();
+            var hours = ('0' + now.getHours()).slice(-2);
+            var minutes = ('0' + now.getMinutes()).slice(-2);
+            var weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            var dateStr = (now.getMonth() + 1) + '月' + now.getDate() + '日 ' + weekDays[now.getDay()];
 
-            document.getElementById('clock').innerText = `${hours}:${minutes}`;
-            document.getElementById('date').innerText = dateStr;
+            document.getElementById('clock').innerHTML = hours + ':' + minutes;
+            document.getElementById('date').innerHTML = dateStr;
             
-            updateLunarOffline(now);
+            // 离线黄历 (简单版)
+            updateLunarSimple(now);
         }
 
-        // --- 2. 离线黄历 (V7 修复版: 强制数字转汉字) ---
-        
-        // 辅助函数：将数字天转换为农历叫法 (4 -> 初四, 15 -> 十五, 23 -> 廿三)
-        function getLunarDayName(num) {
-            const n = parseInt(num);
-            const digits = ['','一','二','三','四','五','六','七','八','九','十'];
-            if (n <= 10) return '初' + digits[n];
-            if (n === 20) return '二十';
-            if (n === 30) return '三十';
-            if (n < 20) return '十' + digits[n - 10];
-            if (n < 30) return '廿' + digits[n - 20];
-            return n; // 兜底
-        }
-
-        function updateLunarOffline(dateObj) {
+        // 2. 离线黄历 (不依赖 Intl, 纯字符串处理)
+        function updateLunarSimple(d) {
+            // 由于老设备不支持Intl，我们使用一个极其简化的“宜”生成器
+            // 真正的农历转换在老设备上非常庞大，这里为了不报错，
+            // 如果设备不支持 Intl，则只显示“宜”
+            var lunarText = "农历查询中";
+            
             try {
-                // 使用 Intl 获取基础农历字符串
-                const options = { calendar: 'chinese', day: 'numeric', month: 'long' };
-                let lunarStr = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', options).format(dateObj);
-                
-                // 1. 去掉年份 (如 "2025年")
-                lunarStr = lunarStr.replace(/[0-9]+年/, ''); 
-                
-                // 2. 关键修复：检测并替换未转化的数字日
-                // 正则寻找“月”后面的数字，或者直接结尾的数字
-                // 例如：Kindle可能返回 "十月4日" 或 "十月4"
-                lunarStr = lunarStr.replace(/(\d+)(日)?/g, function(match, p1) {
-                    return getLunarDayName(p1);
-                });
-                
-                // 离线生成“宜” (伪随机)
-                const seed = dateObj.getFullYear() + dateObj.getMonth() + dateObj.getDate();
-                const activities = ['阅读', '思考', '锻炼', '扫除', '听歌', '代码', '会友', '休息', '散步', '品茶', '整理', '观影'];
-                let idx1 = seed % activities.length;
-                let idx2 = (seed * 2) % activities.length;
-                let idx3 = (seed * 3) % activities.length;
-                if(idx2 === idx1) idx2 = (idx2 + 1) % activities.length;
-                if(idx3 === idx1 || idx3 === idx2) idx3 = (idx3 + 1) % activities.length;
-                
-                const yi = `${activities[idx1]} ${activities[idx2]} ${activities[idx3]}`;
-                
-                document.getElementById('lunar').innerText = `农历${lunarStr} [宜] ${yi}`;
-            } catch (e) {
-                document.getElementById('lunar').innerText = "农历显示需更新固件";
-            }
+                // 尝试检测 Intl
+                if (window.Intl && window.Intl.DateTimeFormat) {
+                     var formatter = new window.Intl.DateTimeFormat('zh-CN-u-ca-chinese', {day: 'numeric', month: 'long'});
+                     lunarText = "农历" + formatter.format(d).replace(/[0-9]+年/, '');
+                     // 简单替换数字
+                     lunarText = lunarText.replace(/(\d+)(日)?/g, function(m, p1){ return getLunarName(p1); });
+                }
+            } catch(e) {}
+
+            // 生成宜
+            var seed = d.getFullYear() + d.getMonth() + d.getDate();
+            var acts = ['阅读', '思考', '锻炼', '扫除', '听歌', '代码', '会友', '休息', '散步', '品茶', '整理', '观影'];
+            var y1 = acts[seed % acts.length];
+            var y2 = acts[(seed * 2) % acts.length];
+            
+            document.getElementById('lunar').innerHTML = lunarText + ' [宜] ' + y1 + ' ' + y2;
         }
 
-        // --- 3. 天气 (保持 V6 的全功能) ---
-        function speedToLevel(kmh) {
-            if (kmh < 1) return '0';
-            if (kmh < 6) return '1';
-            if (kmh < 12) return '2';
-            if (kmh < 20) return '3';
-            if (kmh < 29) return '4';
-            if (kmh < 39) return '5';
-            if (kmh < 50) return '6';
-            if (kmh < 62) return '7';
-            return '8+';
+        function getLunarName(n) {
+            n = parseInt(n);
+            var c = ['','一','二','三','四','五','六','七','八','九','十'];
+            if(n<=10) return '初'+c[n];
+            if(n<20) return '十'+c[n-10];
+            if(n==20) return '二十';
+            if(n==30) return '三十';
+            if(n<30) return '廿'+c[n-20];
+            return n;
+        }
+
+        // 3. 通用 Ajax 函数 (替代 fetch)
+        function ajaxGet(url, successFn, failFn) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 400) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            successFn(data);
+                        } catch(e) { if(failFn) failFn(); }
+                    } else {
+                        if(failFn) failFn();
+                    }
+                }
+            };
+            xhr.onerror = failFn;
+            xhr.send();
+        }
+
+        // 4. 天气功能
+        function fetchWeather() {
+            var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + LAT + '&longitude=' + LON + '&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,relative_humidity_2m_mean&timezone=Asia%2FShanghai&forecast_days=4';
+            
+            ajaxGet(url, function(data) {
+                var html = '';
+                var days = ['今天', '明天', '后天', '大后天'];
+                
+                for(var i=0; i<4; i++) {
+                    var max = Math.round(data.daily.temperature_2m_max[i]);
+                    var min = Math.round(data.daily.temperature_2m_min[i]);
+                    var code = data.daily.weather_code[i];
+                    var hum = data.daily.relative_humidity_2m_mean[i];
+                    var wind = data.daily.wind_speed_10m_max[i];
+                    
+                    // 风力计算
+                    var windLvl = '0';
+                    if(wind>=1) windLvl='1'; if(wind>=6) windLvl='2'; if(wind>=12) windLvl='3';
+                    if(wind>=20) windLvl='4'; if(wind>=29) windLvl='5'; if(wind>=39) windLvl='6';
+                    
+                    html += '<div class="day">' +
+                            '<div class="day-name">' + days[i] + '</div>' +
+                            '<div class="day-icon">' + getWeatherEmoji(code) + '</div>' +
+                            '<div class="day-temp">🌡️' + min + '-' + max + '°</div>' +
+                            '<div class="day-detail">💧' + hum + '% 🌬️' + windLvl + '级</div>' +
+                            '<div class="day-desc">' + wmoToText(code) + '</div>' +
+                            '</div>';
+                }
+                document.getElementById('weather-box').innerHTML = html;
+            }, function() {
+                document.getElementById('weather-box').innerHTML = '天气更新失败';
+            });
         }
 
         function getWeatherEmoji(code) {
-            const map = {
-                0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
-                45: '🌫️', 48: '🌫️', 51: '🌧️', 53: '🌧️', 55: '🌧️',
-                61: '🌧️', 63: '🌧️', 65: '🌧️', 80: '🌦️', 81: '🌦️',
-                95: '⛈️', 96: '⛈️', 99: '⛈️'
-            };
-            return map[code] || '❓';
+            if(code===0) return '☀️'; 
+            if(code===1||code===2||code===3) return '☁️';
+            if(code>=51 && code<=67) return '🌧️';
+            if(code>=95) return '⛈️';
+            return '⛅'; // 默认
         }
-
+        
         function wmoToText(code) {
-            const map = {
-                0: '晴', 1: '多云', 2: '阴', 3: '阴',
-                45: '雾', 48: '雾', 51: '小雨', 53: '中雨', 55: '大雨',
-                61: '小雨', 63: '中雨', 65: '大雨', 80: '阵雨', 81: '阵雨',
-                95: '雷雨', 96: '雷雨', 99: '雷雨'
-            };
-            return map[code] || '未知';
+            if(code===0) return '晴';
+            if(code===1) return '多云';
+            if(code===2) return '阴';
+            if(code===3) return '阴';
+            if(code>=51) return '雨';
+            return '多云';
         }
 
-        async function fetchWeather() {
-            try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,relative_humidity_2m_mean&timezone=Asia%2FShanghai&forecast_days=4`;
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                let html = '';
-                const days = ['今天', '明天', '后天', '大后天'];
+        // 5. 台词功能
+        function fetchQuote() {
+            // 使用 XMLHttpRequest
+            ajaxGet('https://v1.hitokoto.cn/?c=h&c=d', function(data) {
+                var content = data.hitokoto;
+                if(content.length > 25) content = content.substring(0, 24) + '...';
+                document.getElementById('quote-text').innerHTML = '“' + content + '”';
+                document.getElementById('quote-source').innerHTML = '—— 《' + data.from + '》';
+            }, function() {
+                document.getElementById('quote-text').innerHTML = '“生活不是电影。”';
+            });
+        }
 
-                for(let i=0; i<4; i++) {
-                    const max = Math.round(data.daily.temperature_2m_max[i]);
-                    const min = Math.round(data.daily.temperature_2m_min[i]);
-                    const code = data.daily.weather_code[i];
-                    
-                    const hum = data.daily.relative_humidity_2m_mean[i]; 
-                    const windSpeed = data.daily.wind_speed_10m_max[i];
-                    const windLevel = speedToLevel(windSpeed);
-                    
-                    html += `
-                        <div class="day">
-                            <div class="day-name">${days[i]}</div>
-                            <div class="day-icon">${getWeatherEmoji(code)}</div>
-                            <div class="day-temp">🌡️ ${min}-${max}度</div>
-                            <div class="day-detail">
-                                <span>💧${hum}%</span>
-                                <span>🌬️${windLevel}级</span>
-                            </div>
-                            <div class="day-desc">${wmoToText(code)}</div>
-                        </div>
-                    `;
-                }
-                document.getElementById('weather-box').innerHTML = html;
-            } catch (e) {
-                document.getElementById('weather-box').innerText = "天气加载失败";
+        // 6. 横屏切换功能
+        function toggleRotate() {
+            var body = document.body;
+            if(body.className.indexOf('landscape-mode') > -1) {
+                body.className = '';
+            } else {
+                body.className = 'landscape-mode';
             }
         }
 
-        // --- 4. 台词 ---
-        async function fetchQuote() {
-            try {
-                const res = await fetch('https://v1.hitokoto.cn/?c=h&c=d');
-                const data = await res.json();
-                let content = data.hitokoto;
-                if (content.length > 30) content = content.substring(0, 28) + "...";
-                
-                document.getElementById('quote-text').innerText = `“${content}”`;
-                document.getElementById('quote-source').innerText = `—— 《${data.from}》`;
-            } catch (e) {
-                document.getElementById('quote-text').innerText = "“生活不是电影，生活比电影苦。”";
-                document.getElementById('quote-source').innerText = "—— 《天堂电影院》";
-            }
-        }
+        // 初始化
+        updateClock();
+        fetchWeather();
+        fetchQuote();
 
-        // --- 初始化 ---
-        function init() {
-            updateClock(); 
-            fetchWeather();
-            fetchQuote();
+        // 定时器
+        setInterval(updateClock, 60000); 
+        setInterval(function(){ fetchWeather(); fetchQuote(); }, 1200000);
 
-            setInterval(updateClock, 60000); 
-            setInterval(() => {
-                fetchWeather();
-                fetchQuote();
-            }, 1200000); 
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
