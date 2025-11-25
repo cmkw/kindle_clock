@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, user-scalable=no">
-    <title>Kindle Dashboard V12 (Big Font 3-Day)</title>
+    <title>Kindle Dashboard V13 (East-8 Time)</title>
     <style>
         /* --- 基础样式 --- */
         body {
@@ -32,29 +32,29 @@
             transition: transform 0.5s;
         }
 
-        /* --- 1. 顶部区域 (加大) --- */
+        /* --- 1. 顶部区域 --- */
         .header-wrap {
             width: 96%;
             margin: 15px auto 5px auto;
-            border-bottom: 4px solid #000; /* 线条加粗 */
+            border-bottom: 4px solid #000;
             padding-bottom: 10px;
         }
         #clock {
-            font-size: 160px; /* 巨大化 */
+            font-size: 160px;
             font-weight: 900;
             line-height: 0.9;
             letter-spacing: -6px;
             margin-bottom: 5px;
         }
-        #date-line { font-size: 32px; font-weight: bold; margin-top: 5px; } /* 日期加大 */
+        #date-line { font-size: 32px; font-weight: bold; margin-top: 5px; }
         
-        /* --- 2. 中部天气 (Table布局 - 3列大字) --- */
+        /* --- 2. 中部天气 --- */
         .weather-wrap {
             width: 96%;
             margin: 20px auto;
         }
         .location-bar {
-            font-size: 20px; font-weight: bold; /* 地点加大 */
+            font-size: 20px; font-weight: bold;
             border-bottom: 2px dashed #000;
             display: inline-block;
             margin-bottom: 15px; padding-bottom: 4px;
@@ -69,13 +69,12 @@
             text-align: center;
             vertical-align: top;
             padding: 0 5px;
-            border-right: 2px dotted #aaa; /* 分隔线加粗 */
+            border-right: 2px dotted #aaa;
         }
         .day-cell:last-child { border-right: none; }
 
-        /* 天气元素全面加大 */
         .d-name { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
-        .d-icon { font-size: 70px; line-height: 1.1; margin: 5px 0; font-family: serif; } /* 图标巨大 */
+        .d-icon { font-size: 70px; line-height: 1.1; margin: 5px 0; font-family: serif; }
         .d-temp { font-size: 22px; font-weight: bold; margin: 5px 0; }
         .d-det { font-size: 16px; margin: 5px 0; white-space: nowrap; font-weight: bold; }
 
@@ -97,7 +96,6 @@
             cursor: pointer; z-index: 999; fontWeight: bold;
         }
 
-        /* 强制横屏模式 */
         body.landscape-mode #container {
             transform: rotate(90deg);
             -webkit-transform: rotate(90deg);
@@ -159,17 +157,26 @@
             xhr.send();
         }
 
-        // 2. 时钟
+        // 2. 时钟 (强制东八区逻辑)
         function updateClock() {
-            var now = new Date();
+            var d = new Date();
+            // 计算 UTC 毫秒数: 当前时间 + (本地时区偏移分钟 * 60000)
+            var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+            
+            // 计算 北京时间 (UTC + 8小时)
+            var offset = 8; 
+            var now = new Date(utc + (3600000 * offset));
+
+            // 接下来的获取都是基于新的 'now' (即北京时间对象)
             var hours = ('0' + now.getHours()).slice(-2);
             var minutes = ('0' + now.getMinutes()).slice(-2);
             var weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            
             document.getElementById('clock').innerHTML = hours + ':' + minutes;
             document.getElementById('date').innerHTML = (now.getMonth() + 1) + '月' + now.getDate() + '日 ' + weekDays[now.getDay()];
         }
 
-        // 3. 天气系统 (仅3天)
+        // 3. 天气系统
         function getSafeIcon(code) {
             if(code === 0) return '☀'; 
             if(code > 0 && code <= 3) return '☁'; 
@@ -187,7 +194,6 @@
                 var htmlStr = '';
                 var daysStr = ['今天', '明天', '后天'];
                 
-                // 循环次数改为 3 (只取前3天)
                 for(var i=0; i<3; i++) {
                     var d = data.daily;
                     var max = Math.round(d.temperature_2m_max[i]);
