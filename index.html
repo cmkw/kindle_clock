@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, user-scalable=no">
-    <title>Kindle Dashboard V11 (Clean)</title>
+    <title>Kindle Dashboard V12 (Big Font 3-Day)</title>
     <style>
         /* --- 基础样式 --- */
         body {
@@ -32,32 +32,32 @@
             transition: transform 0.5s;
         }
 
-        /* --- 1. 顶部区域 (已精简) --- */
+        /* --- 1. 顶部区域 (加大) --- */
         .header-wrap {
             width: 96%;
-            margin: 20px auto 10px auto; /* 增加顶部留白，更美观 */
-            border-bottom: 3px solid #000;
+            margin: 15px auto 5px auto;
+            border-bottom: 4px solid #000; /* 线条加粗 */
             padding-bottom: 10px;
         }
         #clock {
-            font-size: 120px; /* 字体加大，填充空间 */
+            font-size: 160px; /* 巨大化 */
             font-weight: 900;
-            line-height: 1.0;
-            letter-spacing: -5px;
+            line-height: 0.9;
+            letter-spacing: -6px;
             margin-bottom: 5px;
         }
-        #date-line { font-size: 24px; font-weight: bold; margin-top: 5px; }
+        #date-line { font-size: 32px; font-weight: bold; margin-top: 5px; } /* 日期加大 */
         
-        /* --- 2. 中部天气 (Table布局) --- */
+        /* --- 2. 中部天气 (Table布局 - 3列大字) --- */
         .weather-wrap {
-            width: 98%;
+            width: 96%;
             margin: 20px auto;
         }
         .location-bar {
-            font-size: 16px; font-weight: bold;
-            border-bottom: 1px dashed #000;
+            font-size: 20px; font-weight: bold; /* 地点加大 */
+            border-bottom: 2px dashed #000;
             display: inline-block;
-            margin-bottom: 10px; padding-bottom: 2px;
+            margin-bottom: 15px; padding-bottom: 4px;
         }
         
         #weather-table {
@@ -68,33 +68,33 @@
         .day-cell {
             text-align: center;
             vertical-align: top;
-            padding: 0 2px;
-            border-right: 1px dotted #aaa;
+            padding: 0 5px;
+            border-right: 2px dotted #aaa; /* 分隔线加粗 */
         }
         .day-cell:last-child { border-right: none; }
 
-        .d-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-        .d-icon { font-size: 40px; line-height: 1.2; margin: 5px 0; font-family: serif; } /* 图标稍微加大 */
-        .d-temp { font-size: 16px; font-weight: bold; margin: 4px 0; }
-        .d-det { font-size: 13px; margin: 4px 0; white-space: nowrap; }
-        .d-desc { font-size: 15px; margin-top: 5px; font-weight: bold;}
+        /* 天气元素全面加大 */
+        .d-name { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
+        .d-icon { font-size: 70px; line-height: 1.1; margin: 5px 0; font-family: serif; } /* 图标巨大 */
+        .d-temp { font-size: 22px; font-weight: bold; margin: 5px 0; }
+        .d-det { font-size: 16px; margin: 5px 0; white-space: nowrap; font-weight: bold; }
 
         /* --- 3. 底部台词 --- */
         .footer-wrap {
             width: 96%;
             margin: 10px auto;
-            border-top: 2px solid #000;
+            border-top: 3px solid #000;
             padding-top: 15px;
         }
-        #quote-text { font-size: 19px; font-style: italic; font-weight: bold; line-height: 1.3; }
-        #quote-source { font-size: 16px; text-align: right; margin-top: 5px; }
+        #quote-text { font-size: 22px; font-style: italic; font-weight: bold; line-height: 1.3; }
+        #quote-source { font-size: 18px; text-align: right; margin-top: 5px; }
 
         /* --- 旋转按钮 --- */
         #rotate-btn {
             position: fixed; bottom: 10px; right: 10px;
             font-size: 24px; border: 2px solid #000;
-            background: #fff; padding: 4px 8px; border-radius: 4px;
-            cursor: pointer; z-index: 999;
+            background: #fff; padding: 4px 10px; border-radius: 6px;
+            cursor: pointer; z-index: 999; fontWeight: bold;
         }
 
         /* 强制横屏模式 */
@@ -110,7 +110,7 @@
 </head>
 <body>
 
-    <div id="rotate-btn" onclick="toggleRotate()">⟳ 切屏</div>
+    <div id="rotate-btn" onclick="toggleRotate()">⟳</div>
 
     <div id="container">
         <div class="header-wrap">
@@ -159,18 +159,17 @@
             xhr.send();
         }
 
-        // 2. 时钟 (仅公历)
+        // 2. 时钟
         function updateClock() {
             var now = new Date();
-            var utcHours = now.getUTCHours();
-            var hours = ('0' + ((utcHours + 8) % 24)).slice(-2);
+            var hours = ('0' + now.getHours()).slice(-2);
             var minutes = ('0' + now.getMinutes()).slice(-2);
             var weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
             document.getElementById('clock').innerHTML = hours + ':' + minutes;
             document.getElementById('date').innerHTML = (now.getMonth() + 1) + '月' + now.getDate() + '日 ' + weekDays[now.getDay()];
         }
 
-        // 3. 天气系统 (安全图标 + 文字标签)
+        // 3. 天气系统 (仅3天)
         function getSafeIcon(code) {
             if(code === 0) return '☀'; 
             if(code > 0 && code <= 3) return '☁'; 
@@ -186,9 +185,10 @@
             
             ajaxGet(url, function(data) {
                 var htmlStr = '';
-                var daysStr = ['今天', '明天', '后天', '大后天'];
+                var daysStr = ['今天', '明天', '后天'];
                 
-                for(var i=0; i<4; i++) {
+                // 循环次数改为 3 (只取前3天)
+                for(var i=0; i<3; i++) {
                     var d = data.daily;
                     var max = Math.round(d.temperature_2m_max[i]);
                     var min = Math.round(d.temperature_2m_min[i]);
